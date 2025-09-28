@@ -2,15 +2,9 @@ import admin from '../config/firebase-admin.js';
 
 export const verifyFirebaseToken = async (req, res, next) => {
   try {
-    // For development, allow requests without token
-    if (process.env.NODE_ENV !== 'production') {
-      req.user = {
-        firebaseUid: 'dev-uid',
-        email: req.body.email || 'dev@example.com',
-        emailVerified: true
-      };
-      return next();
-    }
+    console.log('Verifying token...');
+    console.log('Headers:', req.headers);
+    console.log('Body:', req.body);
 
     const authHeader = req.headers.authorization;
     if (!authHeader?.startsWith('Bearer ')) {
@@ -26,15 +20,10 @@ export const verifyFirebaseToken = async (req, res, next) => {
     };
     next();
   } catch (error) {
-    if (process.env.NODE_ENV !== 'production') {
-      // In development, continue without token
-      req.user = {
-        firebaseUid: 'dev-uid',
-        email: req.body.email || 'dev@example.com',
-        emailVerified: true
-      };
-      return next();
-    }
-    res.status(401).json({ message: 'Invalid token' });
+    console.error('Token verification error:', error);
+    res.status(401).json({ 
+      message: 'Invalid token',
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Token verification failed'
+    });
   }
 };

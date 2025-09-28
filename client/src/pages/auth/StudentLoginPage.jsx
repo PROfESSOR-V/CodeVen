@@ -1,5 +1,16 @@
 import { BaseLoginForm } from '../../components/auth/BaseLoginForm';
 
+const departments = [
+  'Computer Science',
+  'Information Technology',
+  'Electrical Engineering',
+  'Electronics & Communication',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Chemical Engineering',
+  'BioTechnology',
+];
+
 export function StudentLoginPage() {
   const additionalFields = [
     {
@@ -9,29 +20,27 @@ export function StudentLoginPage() {
       placeholder: 'Enter your student ID'
     },
     {
+      name: 'department',
+      label: 'Department',
+      type: 'select',
+      required: true,
+      placeholder: 'Select your department',
+      options: departments
+    },
+    {
       name: 'semester',
       label: 'Semester',
       type: 'number',
       required: true,
-      placeholder: 'Current semester (1-8)'
-    },
-    {
-      name: 'department',
-      label: 'Department',
-      required: true,
-      placeholder: 'Your department'
+      placeholder: 'Current semester (1-8)',
+      min: 1,
+      max: 8
     }
   ];
-
-  const handleToggleForm = (formType) => {
-    // Handle signup form toggle
-    console.log('Toggle to:', formType);
-  };
 
   return (
     <BaseLoginForm
       role="student"
-      onToggleForm={handleToggleForm}
       additionalFields={additionalFields}
     />
   );

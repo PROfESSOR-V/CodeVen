@@ -32,6 +32,9 @@ const validateRoleFields = (role, data) => {
 // @access  Public
 export const registerUser = async (req, res) => {
   try {
+    console.log('Register request body:', req.body);
+    console.log('User from token:', req.user);
+
     const { 
       firebaseUid,
       name, 
@@ -43,9 +46,43 @@ export const registerUser = async (req, res) => {
       semester
     } = req.body;
 
+    // Verify we have all required fields
+    if (!firebaseUid || !name || !email || !role) {
+      return res.status(400).json({ 
+        message: 'Missing required fields',
+        required: ['firebaseUid', 'name', 'email', 'role'],
+        received: req.body 
+      });
+    }
+
     // Verify the Firebase token
-    if (!req.user || req.user.firebaseUid !== firebaseUid) {
-      return res.status(401).json({ message: 'Unauthorized' });
+    console.log('Token verification:', {
+      userFromToken: req.user,
+      providedUid: firebaseUid,
+      providedEmail: email
+    });
+
+    // In development, allow the registration if email matches
+    if (process.env.NODE_ENV !== 'production') {
+      if (req.user.email === email) {
+        console.log('Development mode: Allowing registration with matching email');
+      } else {
+        console.log('Development mode: Email mismatch');
+        return res.status(401).json({
+          message: 'Unauthorized - Email mismatch',
+          userFromToken: req.user.email,
+          providedEmail: email
+        });
+      }
+    } else {
+      // In production, strictly verify Firebase UID
+      if (!req.user || req.user.firebaseUid !== firebaseUid) {
+        return res.status(401).json({ 
+          message: 'Unauthorized - Token mismatch',
+          userFromToken: req.user?.firebaseUid,
+          providedUid: firebaseUid
+        });
+      }
     }
 
     // Check if user exists in MongoDB

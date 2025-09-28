@@ -55,35 +55,47 @@ export function FirebaseAuthProvider({ children }) {
   const register = async (email, password, userData) => {
     try {
       setError(null);
+      console.log('Starting registration process...', { email, userData });
+      
       // Create user in Firebase
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      console.log('Firebase user created:', userCredential.user.uid);
       
       // Update Firebase profile
       await updateProfile(userCredential.user, {
         displayName: userData.name
       });
+      console.log('Firebase profile updated');
 
       // Send email verification
       await sendEmailVerification(userCredential.user);
+      console.log('Verification email sent');
 
-      // Get Firebase ID token
-      const token = await userCredential.user.getIdToken();
+      // Get fresh token
+      const token = await userCredential.user.getIdToken(true);
+      console.log('Got fresh token');
 
       // Create user in your backend
+      const requestBody = {
+        ...userData,
+        firebaseUid: userCredential.user.uid,
+        email: userCredential.user.email
+      };
+      console.log('Sending backend request:', requestBody);
+
       const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/register`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${token}`
         },
-        body: JSON.stringify({
-          ...userData,
-          firebaseUid: userCredential.user.uid
-        })
+        body: JSON.stringify(requestBody)
       });
 
       if (!response.ok) {
-        throw new Error('Failed to create user in backend');
+        const errorData = await response.json();
+        console.error('Backend registration failed:', errorData);
+        throw new Error(errorData.message || 'Failed to create user in backend');
       }
 
       return userCredential.user;
@@ -97,9 +109,41 @@ export function FirebaseAuthProvider({ children }) {
   const login = async (email, password) => {
     try {
       setError(null);
+      console.log('Starting login process...', { email });
+      
+      // Sign in with Firebase
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      console.log('Firebase login successful:', userCredential.user.uid);
+
+      // Get fresh ID token
+      const token = await userCredential.user.getIdToken(true);
+      
+      // Sync with backend
+      const response = await fetch(`${import.meta.env.VITE_API_URL}/auth/sync`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
+      if (!response.ok) {
+        console.error('Failed to sync with backend during login');
+        throw new Error('Failed to sync user data');
+      }
+
+      const userData = await response.json();
+      console.log('Backend sync successful:', userData);
+      
+      // Update local user state with combined data
+      setUser({
+        ...userCredential.user,
+        ...userData
+      });
+
       return userCredential.user;
     } catch (error) {
+      console.error('Login error:', error);
       setError(error.message);
       throw error;
     }

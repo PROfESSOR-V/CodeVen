@@ -1,22 +1,36 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import './App.css';
 import { ProfileProvider } from './contexts/ProfileContext.jsx';
+import { FirebaseAuthProvider, useFirebaseAuth } from './contexts/FirebaseAuthContext';
 
-function ProtectedRoute({ children, allowedRoles }) {
-	const role = localStorage.getItem('role');
-	const isAuth = localStorage.getItem('isAuthenticated');
+const ProtectedRoute = ({ children, allowedRoles }) => {
+	const { user, loading } = useFirebaseAuth();
 	
-	console.log('ProtectedRoute check:', { role, isAuth, allowedRoles, path: window.location.pathname });
+	console.log('ProtectedRoute check:', { user, loading, allowedRoles, path: window.location.pathname });
 	
-	if (!role || !allowedRoles.includes(role)) {
-		console.log('Access denied, redirecting to login');
-		return <Navigate to="/login" replace />;
+	if (loading) {
+		// Show loading spinner or placeholder while checking auth
+		return <div>Loading...</div>;
 	}
 	
-	console.log('Access granted');
+	if (!user) {
+		console.log('No user, redirecting to login');
+		return <Navigate to="/login/student" replace />;
+	}
+
+	if (!user.role || !allowedRoles.includes(user.role)) {
+		console.log('Access denied - invalid role:', user.role);
+		return <Navigate to={`/login/${user.role || 'student'}`} replace />;
+	}
+	
+	console.log('Access granted for role:', user.role);
 	return <>{children}</>;
 }
-import { LoginPage } from './pages/LoginPage.jsx';
+
+// Auth pages
+import { StudentLoginPage } from './pages/auth/StudentLoginPage';
+import { FacultyLoginPage } from './pages/auth/FacultyLoginPage';
+import { AdminLoginPage } from './pages/auth/AdminLoginPage';
 import { LandingPage } from './pages/LandingPage.jsx';
 import { StudentLayout } from './layouts/StudentLayout.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
@@ -41,13 +55,17 @@ import { VerifierPage } from './pages/VerifierPage.jsx';
 
 export default function App() {
 	return (
-		<ProfileProvider>
-			<BrowserRouter>
-				<Routes>
+		<FirebaseAuthProvider>
+			<ProfileProvider>
+				<BrowserRouter>
+					<Routes>
 					<Route path="/" element={<LandingPage />} />
-					<Route path="/login" element={<LoginPage />} />
-					<Route path="/auth" element={<FacultyAdminAuth />} />
-					
+					<Route path="/login">
+						<Route index element={<Navigate to="/login/student" replace />} />
+						<Route path="student" element={<StudentLoginPage />} />
+						<Route path="faculty" element={<FacultyLoginPage />} />
+						<Route path="admin" element={<AdminLoginPage />} />
+					</Route>
 					<Route path="/student" element={
 						<ProtectedRoute allowedRoles={['student']}>
 							<StudentLayout />
@@ -90,5 +108,6 @@ export default function App() {
 				</Routes>
 			</BrowserRouter>
 		</ProfileProvider>
+		</FirebaseAuthProvider>
 	);
 }
