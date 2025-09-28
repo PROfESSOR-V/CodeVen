@@ -1,10 +1,16 @@
 import mongoose from "mongoose";
 
-// function to connect to the mongodb database
+const connectDB = async () => {
+  try {
+    mongoose.connection.on('connected', () => console.log('Database is connected'));
+    mongoose.connection.on('error', (err) => console.error('MongoDB connection error:', err));
 
-const connectDB = async()=>{
-    mongoose.connection.on('connected',()=> console.log('Database is connected'));
-    await mongoose.connect(`${process.env.MONGODB_URI}/student-portal`)
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log('MongoDB Connected Successfully');
+  } catch (error) {
+    console.error('Could not connect to MongoDB:', error);
+    process.exit(1);
+  }
 }
 
 export default connectDB

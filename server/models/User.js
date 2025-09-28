@@ -2,6 +2,11 @@ import mongoose from 'mongoose';
 import bcrypt from 'bcrypt';
 
 const userSchema = new mongoose.Schema({
+  firebaseUid: {
+    type: String,
+    required: true,
+    unique: true
+  },
   name: {
     type: String,
     required: [true, 'Name is required'],
@@ -15,19 +20,36 @@ const userSchema = new mongoose.Schema({
     lowercase: true,
     match: [/^\w+([\.-]?\w+)*@\w+([\.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
   },
-  password: {
-    type: String,
-    required: [true, 'Password is required'],
-    minlength: [6, 'Password must be at least 6 characters']
-  },
   role: {
     type: String,
     enum: ['student', 'faculty', 'admin'],
-    default: 'student'
+    required: [true, 'Role is required']
   },
   verified: {
     type: Boolean,
     default: false
+  },
+  studentId: {
+    type: String,
+    sparse: true,
+    unique: true,
+    required: function() { return this.role === 'student'; }
+  },
+  facultyId: {
+    type: String,
+    sparse: true,
+    unique: true,
+    required: function() { return this.role === 'faculty'; }
+  },
+  department: {
+    type: String,
+    required: function() { return this.role === 'faculty' || this.role === 'student'; }
+  },
+  semester: {
+    type: Number,
+    min: 1,
+    max: 8,
+    required: function() { return this.role === 'student'; }
   },
   createdAt: {
     type: Date,

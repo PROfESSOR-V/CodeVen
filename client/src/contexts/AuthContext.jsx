@@ -2,53 +2,131 @@ import React, { createContext, useContext, useState, useEffect } from "react";
 
 const AuthContext = createContext(undefined);
 
+const API_URL = 'http://localhost:5000/api';
+
 export function AuthProvider({ children }) {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
 	const [role, setRole] = useState(null);
+	const [user, setUser] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
 
 	useEffect(() => {
 		try {
-			const storedRole = localStorage.getItem("role");
-			const storedAuth = localStorage.getItem("isAuthenticated");
-
-			if (storedRole && storedAuth === "true") {
-				setRole(storedRole);
-				setIsAuthenticated(true);
+			const token = localStorage.getItem("token");
+			if (token) {
+				// Validate token and fetch user data
+				validateToken(token);
+			} else {
+				setIsLoading(false);
 			}
 		} catch (error) {
 			console.error("Auth initialization error:", error);
-		} finally {
 			setIsLoading(false);
 		}
 	}, []);
 
-	const login = async (email, password, userRole) => {
+	const validateToken = async (token) => {
 		try {
-			if (email && password) {
-				setRole(userRole);
+			const response = await fetch(`${API_URL}/auth/profile`, {
+				headers: {
+					'Authorization': `Bearer ${token}`
+				}
+			});
+			if (response.ok) {
+				const userData = await response.json();
+				setUser(userData);
+				setRole(userData.role);
 				setIsAuthenticated(true);
-				localStorage.setItem("role", userRole);
-				localStorage.setItem("isAuthenticated", "true");
-				return true;
+			} else {
+				// Token is invalid
+				logout();
 			}
-			return false;
+		} catch (error) {
+			console.error("Token validation error:", error);
+			logout();
+		} finally {
+			setIsLoading(false);
+		}
+	};
+
+	const login = async (email, password, userRole, additionalData = {}) => {
+		try {
+			const response = await fetch(`${API_URL}/auth/login`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify({
+					email,
+					password,
+					role: userRole,
+					...additionalData
+				}),
+			});
+
+			const data = await response.json();
+
+			if (response.ok && data.token) {
+				setUser(data);
+				setRole(data.role);
+				setIsAuthenticated(true);
+				localStorage.setItem("token", data.token);
+				return true;
+			} else {
+				throw new Error(data.message || 'Login failed');
+			}
 		} catch (error) {
 			console.error("Login error:", error);
-			return false;
+			throw error;
+		}
+	};
+
+	const register = async (userData) => {
+		try {
+			const response = await fetch(`${API_URL}/auth/register`, {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json',
+				},
+				body: JSON.stringify(userData),
+			});
+
+			const data = await response.json();
+
+			if (response.ok && data.token) {
+				setUser(data);
+				setRole(data.role);
+				setIsAuthenticated(true);
+				localStorage.setItem("token", data.token);
+				return true;
+			} else {
+				throw new Error(data.message || 'Registration failed');
+			}
+		} catch (error) {
+			console.error("Registration error:", error);
+			throw error;
 		}
 	};
 
 	const logout = () => {
+		setUser(null);
 		setRole(null);
 		setIsAuthenticated(false);
-		localStorage.removeItem("role");
-		localStorage.removeItem("isAuthenticated");
-		localStorage.removeItem("studentProfile");
+		localStorage.removeItem("token");
 	};
 
 	return (
-		<AuthContext.Provider value={{ isAuthenticated, role, login, logout, isLoading }}>
+		<AuthContext.Provider 
+			value={{ 
+				isAuthenticated, 
+				role, 
+				user,
+				login, 
+				logout, 
+				register,
+				isLoading 
+			}}
+		>
 			{children}
 		</AuthContext.Provider>
 	);
@@ -63,5 +141,14 @@ export function useAuth() {
 }
 
 export function getDefaultPath(role) {
-	return role === "student" ? "/student" : "/verify";
+	switch(role) {
+		case 'student':
+			return '/student/dashboard';
+		case 'faculty':
+			return '/faculty/dashboard';
+		case 'admin':
+			return '/admin/dashboard';
+		default:
+			return '/login';
+	}
 }
