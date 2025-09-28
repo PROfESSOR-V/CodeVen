@@ -52,6 +52,7 @@ import { AdminAnalytics } from './pages/AdminAnalytics.jsx';
 import { AdminPlacements } from './pages/AdminPlacements.jsx';
 import { AdminEvents } from './pages/AdminEvents.jsx';
 import { VerifierPage } from './pages/VerifierPage.jsx';
+import { EditProfilePage } from './pages/EditProfilePage.jsx';
 
 export default function App() {
 	return (
@@ -77,6 +78,7 @@ export default function App() {
 						<Route path="activities" element={<ActivitiesPage />} />
 						<Route path="portfolio" element={<PortfolioPage />} />
 						<Route path="profile" element={<ProfilePage />} />
+						<Route path="edit-profile" element={<EditProfilePage />} />
 						<Route path="coding" element={<CodingPage />} />
 						<Route path="resume" element={<ResumeImportPage />} />
 					</Route>

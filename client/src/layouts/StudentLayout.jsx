@@ -18,7 +18,6 @@ export function StudentLayout() {
 			<aside className="p-4" style={{background:'var(--bg-medium)', borderRight:'1px solid var(--border-color)'}}>
 				<div className="mb-6">
 					<a href="/" className="text-xl font-bold text-brand-blue">CODEVENGERS</a>
-					<div className="text-xs" style={{color:'var(--text-secondary)'}}>JECRC University</div>
 				</div>
 				<nav className="flex flex-col gap-1">
 					<a href="/landing" className={navLinkClass({ isActive: false })}>🏠 Homepage</a>

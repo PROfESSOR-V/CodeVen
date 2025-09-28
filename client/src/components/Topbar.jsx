@@ -1,10 +1,12 @@
 import { Bell, Search, User2, RefreshCw, X, LogOut } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
+import { useFirebaseAuth } from '../contexts/FirebaseAuthContext';
 
 export function Topbar() {
+    const { user: firebaseUser, loading } = useFirebaseAuth();
 	const navigate = useNavigate();
-	const role = localStorage.getItem('role');
+	const role = firebaseUser?.role || localStorage.getItem('role');
 	const profilePath = role === 'student' ? '/student/profile' : '/login';
 	const [open, setOpen] = useState(false);
 	const [q, setQ] = useState('');
@@ -45,11 +47,16 @@ export function Topbar() {
 
 	const notifications = getNotifications();
 
-	const handleLogout = () => {
-		localStorage.removeItem('role');
-		localStorage.removeItem('isAuthenticated');
-		setShowProfileMenu(false);
-		navigate('/');
+	const handleLogout = async () => {
+		try {
+			await firebaseUser.auth.signOut();
+			localStorage.removeItem('role');
+			localStorage.removeItem('isAuthenticated');
+			setShowProfileMenu(false);
+			navigate('/');
+		} catch (error) {
+			console.error('Error signing out:', error);
+		}
 	};
 
 	const cycleRole = () => {
@@ -137,7 +144,7 @@ export function Topbar() {
 								<div className="text-sm subtle px-2 py-1">No results</div>
 							) : (
 								filtered.slice(0,7).map((s) => (
-									<button key={s.path} className="w-full text-left px-2 py-2 rounded hover:bg-white/10 text-sm" onClick={()=>{ navigate(s.path); setShowSearch(false); }}>
+									<button key={s.path} className="w-full text-left px-2 py-2 rounded text-sm" onClick={()=>{ navigate(s.path); setShowSearch(false); }}>
 										{s.label}
 									</button>
 								))
@@ -185,16 +192,28 @@ export function Topbar() {
 								<div className="text-xs" style={{color:'var(--text-secondary)'}}>{(role || 'USER').toUpperCase()}</div>
 							</div>
 							{role === 'student' && (
-								<button 
-									onClick={() => { 
-										navigate(profilePath); 
-										setShowProfileMenu(false); 
-									}}
-									className="w-full text-left p-2 rounded-md hover:bg-white/10 text-sm flex items-center gap-2"
-								>
-									<User2 size={14} />
-									View Profile
-								</button>
+								<>
+									<button 
+										onClick={() => { 
+											navigate(profilePath); 
+											setShowProfileMenu(false); 
+										}}
+										className="w-full text-left p-2 rounded-md text-sm flex items-center gap-2"
+									>
+										<User2 size={14} />
+										View Profile
+									</button>
+									<button 
+										onClick={() => { 
+											navigate('/student/edit-profile'); 
+											setShowProfileMenu(false); 
+										}}
+										className="w-full text-left p-2 rounded-md text-sm flex items-center gap-2"
+									>
+										<User2 size={14} />
+										Edit Profile
+									</button>
+								</>
 							)}
 							{(role === 'faculty' || role === 'admin') && (
 								<div className="p-2 text-xs" style={{color:'var(--text-secondary)'}}>
@@ -203,7 +222,7 @@ export function Topbar() {
 							)}
 							<button 
 								onClick={handleLogout}
-								className="w-full text-left p-2 rounded-md hover:bg-white/10 text-sm flex items-center gap-2 text-red-400"
+								className="w-full text-left p-2 rounded-md text-sm flex items-center gap-2 text-red-400"
 							>
 								<LogOut size={14} />
 								Logout

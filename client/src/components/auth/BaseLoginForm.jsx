@@ -64,12 +64,12 @@ export function BaseLoginForm({ role, additionalFields = [], disableSignup = fal
 
   return (
     <div className="min-h-screen grid place-items-center p-6" style={{background:'var(--bg-dark)'}}>
-      <div className="w-full max-w-md card p-6 gpu-accelerated hover:scale-105 transition-transform">
+      <div className="w-full max-w-md card p-6">
         <div className="flex items-center gap-3 mb-4">
           <GraduationCap className="text-brand-blue" />
           <div>
-            <div className="text-lg font-semibold text-brand-blue">JECRC University</div>
-            <div className="text-sm" style={{color:'var(--text-secondary)'}}>CODEVENGERS Platform</div>
+            <div className="text-lg font-semibold text-brand-blue">CODEVENGERS</div>
+            <div className="text-sm" style={{color:'var(--text-secondary)'}}>Student Portal</div>
           </div>
         </div>
 

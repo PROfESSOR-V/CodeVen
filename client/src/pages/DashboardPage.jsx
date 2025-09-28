@@ -1,6 +1,7 @@
 import { PieChart, Pie, Cell, ResponsiveContainer, Tooltip, Legend, BarChart, Bar, XAxis, CartesianGrid } from 'recharts';
 import { useEffect, useState } from 'react';
 import { useProfile } from '../contexts/ProfileContext.jsx';
+import { useFirebaseAuth } from '../contexts/FirebaseAuthContext';
 import { useNavigate } from 'react-router-dom';
 import { useScrollAnimation, useStaggeredAnimation, useLegacyScrollAnimation } from '../hooks/useScrollAnimation.js';
 
@@ -12,11 +13,25 @@ const COLORS = ['#1e40af', '#047857'];
 
 export function DashboardPage() {
 	const { profile } = useProfile();
+	const { user } = useFirebaseAuth();
 	const navigate = useNavigate();
+	const [loading, setLoading] = useState(true);
+	const [error, setError] = useState(null);
 	const [countGpa, setCountGpa] = useState(0);
 	const [countApproved, setCountApproved] = useState(0);
 	const [countPending, setCountPending] = useState(0);
 	const [countCoding, setCountCoding] = useState(0);
+	const [dashboardData, setDashboardData] = useState({
+		gpa: 8.5,
+		approvedActivities: 12,
+		pendingActivities: 3,
+		codingProblems: 45,
+		activities: [
+			{ title: 'Hackathon Winner', category: 'Technical', status: 'Approved' },
+			{ title: 'Research Paper', category: 'Academic', status: 'Pending' },
+			{ title: 'Web Dev Workshop', category: 'Workshop', status: 'Approved' }
+		]
+	});
 
 	// Enhanced scroll animation hooks with directions
 	const headerRef = useScrollAnimation({ direction: 'up', delay: 0.1 });
@@ -33,20 +48,55 @@ export function DashboardPage() {
 	});
 
 	useEffect(() => {
-		const animate = (setter, target, duration = 800) => {
-			const start = performance.now();
-			const step = (t) => {
-				const p = Math.min(1, (t - start) / duration);
-				setter(Number((target * p).toFixed(1)));
-				if (p < 1) requestAnimationFrame(step);
-			};
-			requestAnimationFrame(step);
+		const fetchDashboardData = async () => {
+			if (!user) return;
+			
+			setLoading(true);
+			setError(null);
+			try {
+				console.log('Fetching dashboard data...');
+				const token = await user.getIdToken();
+				const response = await fetch(`${import.meta.env.VITE_API_URL}/api/dashboard`, {
+					headers: {
+						'Authorization': `Bearer ${token}`
+					}
+				});
+				
+				if (!response.ok) {
+					throw new Error('Failed to fetch dashboard data');
+				}
+
+				const data = await response.json();
+				console.log('Dashboard data received:', data);
+				if (Object.keys(data).length > 0) {
+					setDashboardData(data);
+				}
+				// If data is empty, keep the pre-saved data
+
+				const animate = (setter, target, duration = 800) => {
+					const start = performance.now();
+					const step = (t) => {
+						const p = Math.min(1, (t - start) / duration);
+						setter(Number((target * p).toFixed(1)));
+						if (p < 1) requestAnimationFrame(step);
+					};
+					requestAnimationFrame(step);
+				};
+
+				animate(setCountGpa, data.gpa || 0);
+				animate(setCountApproved, data.approvedActivities || 0, 700);
+				animate(setCountPending, data.pendingActivities || 0, 700);
+				animate(setCountCoding, data.codingProblems || 0, 900);
+			} catch (error) {
+				console.error('Error fetching dashboard data:', error);
+				setError(error.message);
+			} finally {
+				setLoading(false);
+			}
 		};
-		animate(setCountGpa, parseFloat(profile.gpa));
-		animate(setCountApproved, (profile.activities?.filter(a => a.status === 'Approved').length) || 24, 700);
-		animate(setCountPending, (profile.activities?.filter(a => a.status === 'Pending').length) || 3, 700);
-		animate(setCountCoding, profile.codingStats?.problemsSolved || 250, 900);
-	}, [profile]);
+
+		fetchDashboardData();
+	}, [user]);
 	const switchRole = (newRole) => {
 		localStorage.setItem('role', newRole);
 		localStorage.setItem('isAuthenticated', 'true');
@@ -61,6 +111,31 @@ export function DashboardPage() {
 			window.location.href = '/admin';
 		}
 	};
+
+	if (loading) {
+		return (
+			<div className="p-4">
+				<div className="animate-pulse space-y-4">
+					<div className="h-8 bg-gray-700 rounded w-1/4"></div>
+					<div className="grid md:grid-cols-4 gap-4">
+						{[1,2,3,4].map(i => (
+							<div key={i} className="h-24 bg-gray-700 rounded"></div>
+						))}
+					</div>
+					<div className="grid md:grid-cols-2 gap-4">
+						{[1,2].map(i => (
+							<div key={i} className="h-64 bg-gray-700 rounded"></div>
+						))}
+					</div>
+				</div>
+			</div>
+		);
+	}
+
+	if (error) {
+		// Show warning banner but continue with pre-saved data
+		setTimeout(() => setError(null), 5000); // Hide error after 5 seconds
+	}
 
 	return (
 		<div className="space-y-6">
@@ -85,25 +160,41 @@ export function DashboardPage() {
 			</div>
 
 			<div ref={statsContainerRef} className="grid md:grid-cols-4 gap-4">
-				<div ref={setStatRef(0)} className="card p-4 gpu-accelerated hover:scale-105 transition-transform">
+				<div ref={setStatRef(0)} className="card p-4">
 					<div className="text-sm subtle">GPA</div>
-					<div className="text-3xl font-bold" style={{color:'#58A6FF'}}>{countGpa}</div>
-					<div className="text-xs subtle">Last semester: 8.5</div>
+					<div className="text-3xl font-bold" style={{color:'#58A6FF'}}>
+						{countGpa || 'N/A'}
+					</div>
+					<div className="text-xs subtle">
+						{profile.lastSemesterGpa ? `Last semester: ${profile.lastSemesterGpa}` : 'No previous data'}
+					</div>
 				</div>
 				<div ref={setStatRef(1)} className="card p-4 gpu-accelerated hover:scale-105 transition-transform">
 					<div className="text-sm subtle">Approved Activities</div>
-					<div className="text-3xl font-bold text-green-400">{Math.round(countApproved)}</div>
-					<div className="text-xs subtle">+4 in last 30 days</div>
+					<div className="text-3xl font-bold text-green-400">
+						{countApproved || '0'}
+					</div>
+					<div className="text-xs subtle">
+						{profile.recentApproved ? `+${profile.recentApproved} in last 30 days` : 'No recent activities'}
+					</div>
 				</div>
 				<div ref={setStatRef(2)} className="card p-4 gpu-accelerated hover:scale-105 transition-transform">
 					<div className="text-sm subtle">Pending</div>
-					<div className="text-3xl font-bold text-yellow-300">{Math.round(countPending)}</div>
-					<div className="text-xs subtle">Average review time: 2.3 days</div>
+					<div className="text-3xl font-bold text-yellow-300">
+						{countPending || '0'}
+					</div>
+					<div className="text-xs subtle">
+						{profile.averageReviewTime ? `Average review time: ${profile.averageReviewTime} days` : 'No pending reviews'}
+					</div>
 				</div>
 				<div ref={setStatRef(3)} className="card p-4 gpu-accelerated hover:scale-105 transition-transform">
 					<div className="text-sm subtle">Coding Problems</div>
-					<div className="text-3xl font-bold" style={{color:'#39C5E4'}}>{Math.round(countCoding)}</div>
-					<div className="text-xs subtle">+17 this week</div>
+					<div className="text-3xl font-bold" style={{color:'#39C5E4'}}>
+						{countCoding || '0'}
+					</div>
+					<div className="text-xs subtle">
+						{profile.recentCoding ? `+${profile.recentCoding} this week` : 'No recent solutions'}
+					</div>
 				</div>
 			</div>
 
@@ -137,30 +228,41 @@ export function DashboardPage() {
 
 				<div className="card p-4 hover:scale-105 transition-transform">
 					<div className="font-medium mb-3">Recent Activity</div>
-					<table className="w-full text-sm">
-						<thead>
-							<tr className="text-left text-slate-500">
-								<th className="py-2">Title</th>
-								<th className="py-2">Category</th>
-								<th className="py-2">Status</th>
-							</tr>
-						</thead>
-						<tbody>
-							{(profile.activities || [
-								{ title: 'Hackathon Winner', category: 'Competitions', status: 'Approved', date: '2025-01-10' },
-								{ title: 'NSS Camp', category: 'Volunteering', status: 'Pending', date: '2025-01-08' },
-								{ title: 'Robotics Workshop', category: 'Certifications', status: 'Rejected', date: '2025-01-05' },
-							]).slice(0, 3).map((r, i) => (
-								<tr key={i} className="border-t hover:bg-white/5 transition-colors">
-									<td className="py-2">{r.title}</td>
-									<td className="py-2">{r.category}</td>
-									<td className="py-2">
-										<span className={`badge ${r.status==='Approved'?'badge-green': r.status==='Pending'?'badge-yellow':'badge-red'}`}>{r.status}</span>
-									</td>
+					{profile.activities && profile.activities.length > 0 ? (
+						<table className="w-full text-sm">
+							<thead>
+								<tr className="text-left text-slate-500">
+									<th className="py-2">Title</th>
+									<th className="py-2">Category</th>
+									<th className="py-2">Status</th>
 								</tr>
-							))}
-						</tbody>
-					</table>
+							</thead>
+							<tbody>
+								{profile.activities.slice(0, 3).map((r, i) => (
+									<tr key={i} className="border-t hover:bg-white/5 transition-colors">
+										<td className="py-2">{r.title}</td>
+										<td className="py-2">{r.category}</td>
+										<td className="py-2">
+											<span className={`badge ${r.status==='Approved'?'badge-green': r.status==='Pending'?'badge-yellow':'badge-red'}`}>
+												{r.status}
+											</span>
+										</td>
+									</tr>
+								))}
+							</tbody>
+						</table>
+					) : (
+						<div className="text-center py-8 text-slate-500">
+							<div className="text-2xl mb-2">📝</div>
+							<div>No activities yet</div>
+							<button 
+								onClick={() => navigate('/student/upload')} 
+								className="btn btn-primary mt-4"
+							>
+								Add Your First Activity
+							</button>
+						</div>
+					)}
 				</div>
 			</div>
 

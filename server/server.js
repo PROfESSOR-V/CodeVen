@@ -5,6 +5,7 @@ import connectDB from './config/db.js';
 import { errorHandler, notFound } from './middleware/error.js';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
+import dashboardRoutes from './routes/dashboard.js';
 
 const app = express();
 
@@ -15,6 +16,7 @@ app.use(express.json())
 // Routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api/dashboard', dashboardRoutes);
 app.get('/',(req,res)=>res.send("Api Working"))
 
 // Error Handling Middleware
