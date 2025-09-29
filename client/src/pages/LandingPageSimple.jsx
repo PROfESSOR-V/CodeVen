@@ -1,10 +1,9 @@
 import { Link } from 'react-router-dom';
 import { useState, useEffect } from 'react';
 import { ChevronDown, LayoutGrid, User, BarChart2, ArrowRight, Sparkles, Zap, Target, BookOpen, Award, Globe, ClipboardCheck, Gem } from 'lucide-react';
-import { useScrollAnimation, useStaggeredAnimation } from '../hooks/useScrollAnimation.js';
 import ScrollRevealDemo from '../components/ScrollRevealDemo.jsx';
 
-export function LandingPage() {
+export function LandingPageSimple() {
     const [mobileOpen, setMobileOpen] = useState(false);
     const [scrollProgress, setScrollProgress] = useState(0);
     
@@ -19,17 +18,6 @@ export function LandingPage() {
         }
         return '/login';
     };
-
-    // Enhanced scroll animation hooks with directions
-    const heroRef = useScrollAnimation({ direction: 'up', delay: 0.1 });
-    const featuresRef = useScrollAnimation({ direction: 'up', delay: 0.1 });
-    const statsRef = useScrollAnimation({ direction: 'up', delay: 0.2 });
-    const achievementsRef = useScrollAnimation({ direction: 'up', delay: 0.2 });
-    const contactRef = useScrollAnimation({ direction: 'up', delay: 0.1 });
-    
-    // Staggered animations for various sections
-    const [setFeatureRef, featureRefs] = useStaggeredAnimation(3);
-    const [setStatRef, statRefs] = useStaggeredAnimation(4);
 
     useEffect(() => {
         const handleScroll = () => {
@@ -59,7 +47,7 @@ export function LandingPage() {
                     <div className="hidden md:flex items-center space-x-6 flex-grow">
                         <nav className="flex items-center text-sm space-x-6">
                             <a href="#features" className="text-gray-300 hover:text-white transition-colors">Features</a>
-                            <a href="#institutions" className="text-gray-300 hover:text-white transition-colors">Institutions</a>
+                            <a href="#prototype" className="text-gray-300 hover:text-white transition-colors">Platform</a>
                             <a href="#achievements" className="text-gray-300 hover:text-white transition-colors">Student Success</a>
                             <a href="#contact" className="text-gray-300 hover:text-white transition-colors">Contact</a>
                         </nav>
@@ -93,7 +81,7 @@ export function LandingPage() {
                     <div className="pt-20 px-6">
                         <nav className="space-y-4">
                             <a href="#features" className="block text-lg text-gray-300 hover:text-white" onClick={()=>setMobileOpen(false)}>Features</a>
-                            <a href="#institutions" className="block text-lg text-gray-300 hover:text-white" onClick={()=>setMobileOpen(false)}>Institutions</a>
+                            <a href="#prototype" className="block text-lg text-gray-300 hover:text-white" onClick={()=>setMobileOpen(false)}>Platform</a>
                             <a href="#achievements" className="block text-lg text-gray-300 hover:text-white" onClick={()=>setMobileOpen(false)}>Student Success</a>
                             <a href="#contact" className="block text-lg text-gray-300 hover:text-white" onClick={()=>setMobileOpen(false)}>Contact</a>
                         </nav>
@@ -137,7 +125,7 @@ export function LandingPage() {
             <main>
                 <section className="min-h-screen flex items-center relative overflow-hidden pt-24 pb-16">
                     <div className="absolute inset-0 bg-gradient-to-b from-blue-500/5 via-transparent to-transparent" />
-                    <div ref={heroRef} className="max-w-6xl mx-auto px-6 relative z-10">
+                    <div className="max-w-6xl mx-auto px-6 relative z-10">
                         <div className="text-center mb-12 gpu-accelerated">
                             <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-400 text-sm font-medium">
                                 <Award className="w-4 h-4" />
@@ -167,7 +155,7 @@ export function LandingPage() {
                                 )}
                             </div>
 
-                            <div ref={statsRef} className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto">
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-8 max-w-4xl mx-auto mb-16">
                                 {[
                                     { label: 'Institutions', value: '50+', icon: <Globe className="w-5 h-5" /> },
                                     { label: 'Students', value: '100k+', icon: <User className="w-5 h-5" /> },
@@ -176,12 +164,47 @@ export function LandingPage() {
                                 ].map((stat, index) => (
                                     <div 
                                         key={stat.label} 
-                                        ref={setStatRef(index)}
                                         className="text-center p-4 rounded-lg bg-white/5 hover:bg-white/10 transition-all duration-300 transform hover:scale-105"
                                     >
                                         <div className="flex justify-center mb-2 text-blue-400">{stat.icon}</div>
                                         <div className="text-2xl font-bold text-white mb-1">{stat.value}</div>
                                         <div className="text-sm text-gray-400">{stat.label}</div>
+                                    </div>
+                                ))}
+                            </div>
+
+                            {/* Value Proposition Steps */}
+                            <div className="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto">
+                                {[
+                                    { 
+                                        title: 'Capture', 
+                                        description: 'Students easily log every achievement, from coursework to club leadership.', 
+                                        icon: <Zap className="w-5 h-5" /> 
+                                    },
+                                    { 
+                                        title: 'Verify', 
+                                        description: 'Faculty approve entries with a single click, ensuring institutional credibility.', 
+                                        icon: <Target className="w-5 h-5" /> 
+                                    },
+                                    { 
+                                        title: 'Showcase', 
+                                        description: 'Instantly generate a verified digital portfolio for jobs and higher education.', 
+                                        icon: <Sparkles className="w-5 h-5" /> 
+                                    },
+                                ].map((step, index) => (
+                                    <div 
+                                        key={step.title} 
+                                        className="value-step p-6 rounded-lg hover:bg-white/5 transition-all duration-300 group text-center"
+                                    >
+                                        <div className="flex flex-col items-center gap-4">
+                                            <div className="w-16 h-16 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-500 flex items-center justify-center text-white group-hover:scale-110 transition-transform">
+                                                {step.icon}
+                                            </div>
+                                            <div>
+                                                <h3 className="font-bold text-white text-xl group-hover:text-blue-300 transition-colors mb-2">{step.title}</h3>
+                                                <p className="text-sm text-gray-400">{step.description}</p>
+                                            </div>
+                                        </div>
                                     </div>
                                 ))}
                             </div>
@@ -192,7 +215,7 @@ export function LandingPage() {
                 <section id="features" className="py-24 relative">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent" />
                     <div className="max-w-6xl mx-auto px-6 relative">
-                        <div ref={featuresRef} className="text-center gpu-accelerated mb-16">
+                        <div className="text-center gpu-accelerated mb-16">
                             <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-cyan-500/10 border border-cyan-500/20 text-cyan-300 text-sm font-medium">
                                 <Zap className="w-4 h-4" />
                                 <span>Comprehensive Features</span>
@@ -229,7 +252,6 @@ export function LandingPage() {
                             ].map((feature, index) => (
                                 <div
                                     key={feature.title}
-                                    ref={setFeatureRef(index)}
                                     className="feature-card p-6 rounded-xl border border-gray-800 hover:border-gray-700 bg-gray-900/50 backdrop-blur transition-all duration-300 hover:transform hover:scale-105"
                                 >
                                     <div className={`w-12 h-12 rounded-lg bg-gradient-to-br ${feature.gradient} flex items-center justify-center text-white mb-4`}>
@@ -243,10 +265,121 @@ export function LandingPage() {
                     </div>
                 </section>
 
+                {/* Trusted Institutions Section */}
+                <section className="py-16">
+                    <div className="max-w-6xl mx-auto px-6 text-center">
+                        <h3 className="text-sm font-semibold uppercase tracking-widest text-gray-400 mb-8">TRUSTED BY LEADING EDUCATIONAL INSTITUTIONS</h3>
+                        <div className="flex justify-center items-center gap-12 mt-8 opacity-40 grayscale">
+                            {['University of Technology', 'National Institute of Science', 'Global Education Group', 'Innovation Academy', 'Tech University', 'Research Institute'].map((institution) => (
+                                <div key={institution} className="text-sm bg-white/5 px-4 py-2 rounded-lg border border-gray-700/50">
+                                    {institution}
+                                </div>
+                            ))}
+                        </div>
+                    </div>
+                </section>
+
+                {/* Interactive Demo Section */}
+                <section id="prototype" className="py-24 relative">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-cyan-500/5 to-transparent"></div>
+                    <div className="max-w-6xl mx-auto px-6 text-center relative">
+                        <div className="mb-16">
+                            <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-300 text-sm font-medium">
+                                <Target className="w-4 h-4" />
+                                <span>Interactive Demo</span>
+                            </div>
+                            <h3 className="text-3xl md:text-4xl font-bold text-white mb-6">
+                                Explore the 
+                                <span className="bg-gradient-to-r from-green-400 to-cyan-400 bg-clip-text text-transparent"> Platform</span>
+                            </h3>
+                            <p className="text-lg mx-auto leading-relaxed text-gray-300 max-w-3xl">
+                                An intuitive interface designed for efficiency and engagement. Experience the future of student achievement tracking.
+                            </p>
+                        </div>
+                        
+                        <div className="mockup-container rounded-xl p-8 max-w-4xl mx-auto bg-gray-800/50 border border-gray-700/50 backdrop-blur">
+                            <div className="flex items-center justify-between mb-6">
+                                <div className="text-2xl font-bold text-white">Welcome Back, Alex!</div>
+                                <div className="flex items-center space-x-2">
+                                    <div className="w-3 h-3 rounded-full bg-red-500" />
+                                    <div className="w-3 h-3 rounded-full bg-yellow-500" />
+                                    <div className="w-3 h-3 rounded-full bg-green-500" />
+                                </div>
+                            </div>
+                            
+                            <div className="grid md:grid-cols-3 gap-6">
+                                <div className="md:col-span-1">
+                                    <div className="text-left space-y-3">
+                                        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600/50">
+                                            <LayoutGrid className="inline w-5 h-5 mr-2 text-blue-400"/>
+                                            <span className="text-white font-medium">Dashboard</span>
+                                        </div>
+                                        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600/50">
+                                            <User className="inline w-5 h-5 mr-2 text-cyan-400"/>
+                                            <span className="text-white font-medium">Portfolio</span>
+                                        </div>
+                                        <div className="bg-gray-700/50 p-4 rounded-lg border border-gray-600/50">
+                                            <BarChart2 className="inline w-5 h-5 mr-2 text-gray-400"/>
+                                            <span className="text-white font-medium">Analytics</span>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div className="md:col-span-2">
+                                    <div className="text-left space-y-4">
+                                        <div className="flex justify-between items-center">
+                                            <div className="text-white font-semibold">Profile Completion</div>
+                                            <div className="text-sm text-gray-400">78%</div>
+                                        </div>
+                                        <div className="w-full rounded-full h-2 bg-gray-700">
+                                            <div className="h-2 rounded-full bg-blue-500" style={{width:'78%'}} />
+                                        </div>
+                                        <div className="text-sm text-gray-400">You're almost there! Add your latest information.</div>
+                                        
+                                        <div className="mt-6">
+                                            <div className="text-white font-semibold mb-3">Recent Activity</div>
+                                            <div className="space-y-2">
+                                                <div className="p-3 rounded-md bg-gray-800/50 border border-gray-700/50">
+                                                    <span className="text-green-400 font-semibold">Approved:</span> "AI in Healthcare" Seminar Certificate.
+                                                </div>
+                                                <div className="p-3 rounded-md bg-gray-800/50 border border-gray-700/50">
+                                                    <span className="text-yellow-400 font-semibold">Pending:</span> Leadership role, Coding Club.
+                                                </div>
+                                            </div>
+                                        </div>
+                                        
+                                        <div className="mt-6">
+                                            <div className="text-white font-semibold mb-3">Achievements Overview</div>
+                                            <div className="grid grid-cols-4 gap-4 text-center">
+                                                <div>
+                                                    <div className="text-2xl font-bold text-blue-400">12</div>
+                                                    <div className="text-xs text-gray-400">Academics</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-cyan-400">8</div>
+                                                    <div className="text-xs text-gray-400">Tech Skills</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-green-400">5</div>
+                                                    <div className="text-xs text-gray-400">Leadership</div>
+                                                </div>
+                                                <div>
+                                                    <div className="text-2xl font-bold text-purple-400">3</div>
+                                                    <div className="text-xs text-gray-400">Community</div>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+
                 <section id="achievements" className="py-24 relative overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-green-500/5 to-transparent" />
                     <div className="max-w-6xl mx-auto px-6 relative">
-                        <div ref={achievementsRef} className="text-center mb-16">
+                        <div className="text-center mb-16">
                             <div className="inline-flex items-center gap-2 mb-4 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 text-green-300 text-sm font-medium">
                                 <Target className="w-4 h-4" />
                                 <span>Student Success Stories</span>
@@ -288,33 +421,51 @@ export function LandingPage() {
                 </section>
 
                 <section id="contact" className="py-24 relative">
-                    <div className="max-w-6xl mx-auto px-6">
-                        <div className="text-center mb-16">
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-blue-500/5 to-transparent"></div>
+                    <div className="max-w-6xl mx-auto px-6 text-center relative">
+                        <div className="p-12 rounded-xl bg-gray-800/50 border border-gray-700/50 backdrop-blur">
+                            <div className="inline-flex items-center gap-2 mb-6 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm font-medium">
+                                <Sparkles className="w-4 h-4" />
+                                <span>Ready to Transform?</span>
+                            </div>
                             <h2 className="text-3xl md:text-4xl font-bold text-white mb-6">
-                                Ready to Transform Your Institution?
+                                Get Started with 
+                                <span className="bg-gradient-to-r from-blue-400 to-cyan-400 bg-clip-text text-transparent"> CODEVENGERS</span>
                             </h2>
-                            <p className="text-gray-400 max-w-2xl mx-auto">
-                                Join the digital transformation in higher education. Contact us to learn how we can help elevate your institution's achievement tracking system.
+                            <p className="text-lg mx-auto leading-relaxed mb-10 text-gray-300 max-w-3xl">
+                                Modernize your institution and empower your students. Schedule a personalized demo today and see the future of education.
                             </p>
-                        </div>
+                            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+                                <a href="mailto:demo@codevengers.com" className="group inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-white transition-all duration-300 hover:scale-105 bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 shadow-lg hover:shadow-blue-500/25">
+                                    <span>Request a Demo</span>
+                                    <ArrowRight className="w-4 h-4 group-hover:translate-x-1 transition-transform" />
+                                </a>
+                                <a href="#features" className="inline-flex items-center gap-2 px-8 py-4 rounded-lg font-semibold text-white border border-gray-600 hover:border-blue-400 hover:bg-blue-500/10 transition-all duration-300">
+                                    <span>Learn More</span>
+                                </a>
+                            </div>
 
-                        <div className="max-w-xl mx-auto">
-                            <form className="space-y-6">
-                                <div className="grid md:grid-cols-2 gap-6">
-                                    <input type="text" placeholder="Name" className="input-dark w-full" />
-                                    <input type="email" placeholder="Email" className="input-dark w-full" />
-                                </div>
-                                <input type="text" placeholder="Institution" className="input-dark w-full" />
-                                <textarea placeholder="Message" rows="4" className="input-dark w-full"></textarea>
-                                <button className="w-full btn bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-3 rounded-lg font-medium">
-                                    Send Message
-                                </button>
-                            </form>
+                            <div className="max-w-xl mx-auto">
+                                <form className="space-y-6">
+                                    <div className="grid md:grid-cols-2 gap-6">
+                                        <input type="text" placeholder="Name" className="input-dark w-full" />
+                                        <input type="email" placeholder="Email" className="input-dark w-full" />
+                                    </div>
+                                    <input type="text" placeholder="Institution" className="input-dark w-full" />
+                                    <textarea placeholder="Message" rows="4" className="input-dark w-full"></textarea>
+                                    <button className="w-full btn bg-gradient-to-r from-blue-600 to-cyan-600 hover:from-blue-500 hover:to-cyan-500 text-white py-3 rounded-lg font-medium">
+                                        Send Message
+                                    </button>
+                                </form>
+                            </div>
                         </div>
                     </div>
                 </section>
 
-                <ScrollRevealDemo />
+                {/* Scroll Reveal Demo Section */}
+                <section className="py-20">
+                    <ScrollRevealDemo />
+                </section>
             </main>
 
             <footer className="py-12 border-t border-gray-800">
@@ -333,7 +484,7 @@ export function LandingPage() {
                             <h3 className="text-white font-semibold mb-4">Quick Links</h3>
                             <ul className="space-y-2 text-sm text-gray-400">
                                 <li><a href="#features" className="hover:text-white">Features</a></li>
-                                <li><a href="#institutions" className="hover:text-white">Institutions</a></li>
+                                <li><a href="#prototype" className="hover:text-white">Platform</a></li>
                                 <li><a href="#achievements" className="hover:text-white">Success Stories</a></li>
                                 <li><a href="#contact" className="hover:text-white">Contact</a></li>
                             </ul>

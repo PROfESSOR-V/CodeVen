@@ -44,6 +44,8 @@ import { StudentLoginPage } from './pages/auth/StudentLoginPage';
 import { FacultyLoginPage } from './pages/auth/FacultyLoginPage';
 import { AdminLoginPage } from './pages/auth/AdminLoginPage';
 import { LandingPage } from './pages/LandingPage.jsx';
+import { LandingPageTest } from './pages/LandingPageTest.jsx';
+import { LandingPageSimple } from './pages/LandingPageSimple.jsx';
 import { StudentLayout } from './layouts/StudentLayout.jsx';
 import { DashboardPage } from './pages/DashboardPage.jsx';
 import { UploadPage } from './pages/UploadPage.jsx';
@@ -74,7 +76,7 @@ export default function App() {
 				<ProfileProvider>
 					<BrowserRouter>
 						<Routes>
-					<Route path="/" element={<LandingPage />} />
+					<Route path="/" element={<LandingPageSimple />} />
 					<Route path="/login">
 						<Route index element={<PortalSelection />} />
 						<Route path="student" element={<StudentLoginPage />} />
