@@ -1,12 +1,12 @@
 import { useState } from 'react';
-import { GraduationCap } from 'lucide-react';
-import { useFirebaseAuth } from '../../contexts/FirebaseAuthContext';
+import { GraduationCap, User, ShieldCheck } from 'lucide-react';
+import { useAuth } from '../../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { SignupForm } from './SignupForm';
 
 export function BaseLoginForm({ role, additionalFields = [], disableSignup = false }) {
   const navigate = useNavigate();
-  const { login, user } = useFirebaseAuth();
+  const { login, user } = useAuth();
   const [formType, setFormType] = useState('login');
   const [isLoading, setIsLoading] = useState(false);
   const [formData, setFormData] = useState({
@@ -29,21 +29,30 @@ export function BaseLoginForm({ role, additionalFields = [], disableSignup = fal
       setIsLoading(true);
       console.log('Attempting login...', { email: formData.email, role });
       
-      // Login with Firebase
-      await login(formData.email, formData.password);
-
-      // At this point, the user data should be synced with the backend
-      // and available in the FirebaseAuth context
+      // Use Firebase authentication with role validation
+      await login(formData.email, formData.password, role);
       
-      // Verify user role matches the expected role
-      if (user?.role && user.role !== role) {
-        setError(`This account is not registered as a ${role}. Please use the correct login page.`);
-        return;
+      // Store additional profile data if available
+      if (formData) {
+        localStorage.setItem(`${role}Profile`, JSON.stringify({
+          email: formData.email,
+          role: role,
+          ...additionalFields.reduce((acc, field) => ({
+            ...acc,
+            [field.name]: formData[field.name] || ''
+          }), {})
+        }));
       }
 
-      // Navigate to dashboard
       console.log('Login successful, navigating to dashboard...');
-      navigate(`/${role}/dashboard`);
+      // Navigate to the appropriate dashboard
+      if (role === 'student') {
+        navigate('/student/dashboard');
+      } else if (role === 'faculty') {
+        navigate('/faculty/dashboard');
+      } else if (role === 'admin') {
+        navigate('/admin/dashboard');
+      }
     } catch (err) {
       console.error('Login error:', err);
       setError(err.message || 'Invalid email or password');
@@ -62,66 +71,120 @@ export function BaseLoginForm({ role, additionalFields = [], disableSignup = fal
     );
   }
 
+  const portalTypes = {
+    student: {
+      icon: GraduationCap,
+      color: 'blue',
+      title: 'Student Portal',
+      description: 'Access your academic profile and portfolio'
+    },
+    faculty: {
+      icon: User,
+      color: 'cyan',
+      title: 'Faculty Portal',
+      description: 'Manage students and approve activities'
+    },
+    admin: {
+      icon: ShieldCheck,
+      color: 'purple',
+      title: 'Admin Portal',
+      description: 'Complete system administration access'
+    }
+  };
+
   return (
     <div className="min-h-screen grid place-items-center p-6" style={{background:'var(--bg-dark)'}}>
-      <div className="w-full max-w-md card p-6">
-        <div className="flex items-center gap-3 mb-4">
-          <GraduationCap className="text-brand-blue" />
+      <div className="w-full max-w-2xl card p-8">
+        <div className="flex items-center gap-3 mb-6">
+          <GraduationCap className="w-8 h-8 text-brand-blue" />
           <div>
-            <div className="text-lg font-semibold text-brand-blue">CODEVENGERS</div>
-            <div className="text-sm" style={{color:'var(--text-secondary)'}}>Student Portal</div>
+            <div className="text-2xl font-bold text-brand-blue">CODEVENGERS</div>
+            <div className="text-sm" style={{color:'var(--text-secondary)'}}>
+              {role ? `${role.charAt(0).toUpperCase() + role.slice(1)} Portal` : 'Choose Your Portal'}
+            </div>
           </div>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div>
-            <label className="block text-sm mb-1 subtle">Email</label>
-            <input
-              name="email"
-              value={formData.email}
-              onChange={handleChange}
-              type="email"
-              className="w-full input-dark"
-              placeholder="you@college.edu"
-            />
+        {!role ? (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {Object.entries(portalTypes).map(([key, portal]) => {
+              const Icon = portal.icon;
+              return (
+                <button
+                  key={key}
+                  onClick={() => navigate(`/login/${key}`)}
+                  className={`p-6 rounded-xl border border-gray-700 hover:border-${portal.color}-500/30 hover:bg-${portal.color}-900/10 transition-all duration-300 hover:scale-105 text-left`}
+                >
+                  <Icon className={`w-8 h-8 mb-3 text-${portal.color}-400`} />
+                  <h3 className="text-lg font-semibold text-white mb-2">{portal.title}</h3>
+                  <p className="text-sm text-gray-400">{portal.description}</p>
+                </button>
+              );
+            })}
           </div>
+        ) : (
+          <div className="max-w-md mx-auto">
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div>
+                <label className="block text-sm mb-1 subtle">Email</label>
+                <input
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  type="email"
+                  className="w-full input-dark"
+                  placeholder="you@college.edu"
+                />
+              </div>
 
-          <div>
-            <label className="block text-sm mb-1 subtle">Password</label>
-            <input
-              name="password"
-              value={formData.password}
-              onChange={handleChange}
-              type="password"
-              className="w-full input-dark"
-              placeholder="Your password"
-            />
+              <div>
+                <label className="block text-sm mb-1 subtle">Password</label>
+                <input
+                  name="password"
+                  value={formData.password}
+                  onChange={handleChange}
+                  type="password"
+                  className="w-full input-dark"
+                  placeholder="Your password"
+                />
+              </div>
+
+              {error && (
+                <div className="text-red-400 text-sm">{error}</div>
+              )}
+
+              <div className="flex gap-2">
+                <button 
+                  type="submit"
+                  disabled={isLoading}
+                  className="btn btn-primary w-full"
+                >
+                  {isLoading ? 'Signing in...' : 'Sign in'}
+                </button>
+                {!disableSignup && (
+                  <button
+                    type="button"
+                    onClick={() => setFormType('signup')}
+                    className="btn btn-outline w-full"
+                    disabled={isLoading}
+                  >
+                    Create Account
+                  </button>
+                )}
+              </div>
+
+              <div className="text-center mt-4">
+                <button 
+                  type="button" 
+                  onClick={() => navigate('/login')}
+                  className="text-sm text-gray-400 hover:text-white transition-colors"
+                >
+                  ← Back to portal selection
+                </button>
+              </div>
+            </form>
           </div>
-
-          {error && (
-            <div className="text-red-400 text-sm">{error}</div>
-          )}
-
-          <div className="flex gap-2">
-            <button 
-              type="submit"
-              disabled={isLoading}
-              className="btn btn-primary w-full"
-            >
-              {isLoading ? 'Signing in...' : 'Sign in'}
-            </button>
-            {!disableSignup && (
-              <button
-                type="button"
-                onClick={() => setFormType('signup')}
-                className="btn btn-outline w-full"
-                disabled={isLoading}
-              >
-                Create Account
-              </button>
-            )}
-          </div>
-        </form>
+        )}
       </div>
     </div>
   );

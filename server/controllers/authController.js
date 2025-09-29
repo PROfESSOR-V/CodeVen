@@ -154,13 +154,20 @@ export const syncUserData = async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    // Return user data
+    // Create a token with role information
+    const token = admin.auth().createCustomToken(user.firebaseUid, {
+      role: user.role,
+      department: user.department
+    });
+
+    // Return user data with token
     res.json({
       _id: user._id,
       firebaseUid: user.firebaseUid,
       name: user.name,
       email: user.email,
       role: user.role,
+      token,
       ...(user.studentId && { studentId: user.studentId }),
       ...(user.facultyId && { facultyId: user.facultyId }),
       department: user.department,

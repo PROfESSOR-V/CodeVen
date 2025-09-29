@@ -52,27 +52,43 @@ export function LandingPage() {
 				style={{ transform: `scaleX(${scrollProgress / 100})` }}
 			/>
 			
-			<header className="glass-nav fixed top-4 left-0 right-0 z-50 flex justify-center">
-				<div className="max-w-6xl w-full mx-auto px-6 flex justify-between items-center">
-					<a href="/" className="text-2xl font-bold text-white flex-shrink-0"><span style={{color:'#58A6FF'}}>CODE</span><span style={{color:'#39C5E4'}}>VENGERS</span></a>
-					<div className="hidden md:flex items-center header-pill-container rounded-full px-4 py-2 relative">
-						<nav className="flex items-center text-sm space-x-2">
-							<a href="#features" className="text-gray-300 hover:text-white transition-colors px-3 py-1 rounded-full hover:bg:white/10">Use Cases</a>
-							<a href="#prototype" className="text-gray-300 hover:text:white transition-colors px-3 py-1 rounded-full hover:bg-white/10">Platform</a>
-							<button onClick={()=>setCustomersOpen(v=>!v)} className="text-gray-300 hover:text-white transition-colors px-3 py-1 flex items-center rounded-full hover:bg-white/10">Customers <ChevronDown className="w-4 h-4 ml-1" /></button>
-							{customersOpen && (
-								<div className="absolute top-full mt-2 left-1/2 -translate-x-1/2 surface p-2 text-sm z-20">
-									{['Universities','Colleges','Institutes'].map((x)=> (
-										<div key={x} className="px-3 py-2 rounded hover:bg-white/10 cursor-pointer" onClick={()=>setCustomersOpen(false)}>{x}</div>
-									))}
-								</div>
-							)}
-							<a href="#contact" className="text-gray-300 hover:text-white transition-colors px-3 py-1 rounded-full hover:bg-white/10">Contact</a>
+			<header className="header-glass fixed top-4 left-1/2 transform -translate-x-1/2 z-50">
+				<div className="flex items-center px-4">
+					<a href="/" className="text-2xl font-bold text-white flex-shrink-0 mr-8">
+						<span style={{color:'#58A6FF'}}>CODE</span>
+						<span style={{color:'#39C5E4'}}>VENGERS</span>
+					</a>
+					<div className="hidden md:flex items-center space-x-6">
+						<nav className="flex items-center text-sm space-x-6">
+							<a href="#features" className="text-gray-300 hover:text-white transition-colors">Use Cases</a>
+							<a href="#prototype" className="text-gray-300 hover:text-white transition-colors">Platform</a>
+							<div className="relative">
+								<button 
+									onClick={()=>setCustomersOpen(v=>!v)} 
+									className="text-gray-300 hover:text-white transition-colors flex items-center"
+								>
+									Customers <ChevronDown className="w-4 h-4 ml-1" />
+								</button>
+								{customersOpen && (
+									<div className="dropdown-glass absolute top-full mt-2 left-1/2 -translate-x-1/2 p-2 text-sm z-20 min-w-[160px]">
+										{['Universities','Colleges','Institutes'].map((x)=> (
+											<div 
+												key={x} 
+												className="px-3 py-2 rounded hover:bg-white/10 cursor-pointer transition-colors" 
+												onClick={()=>setCustomersOpen(false)}
+											>
+												{x}
+											</div>
+										))}
+									</div>
+								)}
+							</div>
+							<a href="#contact" className="text-gray-300 hover:text-white transition-colors">Contact</a>
 						</nav>
-						<div className="w-px h-5" style={{background:'var(--border-color)'}} />
+						<div className="w-px h-5 bg-gray-700" />
 						{role ? (
-							<div className="flex items:center gap-3">
-								<span className="text-gray-300 text-sm font-medium">Logged in as {role}</span>
+							<div className="flex items-center gap-4">
+								<span className="text-gray-300 text-sm">Logged in as {role}</span>
 								<button 
 									onClick={() => {
 										localStorage.removeItem('role');
@@ -80,18 +96,22 @@ export function LandingPage() {
 										localStorage.removeItem('studentProfile');
 										window.location.reload();
 									}}
-									className="text-red-400 hover:text-red-300 transition-colors text-sm font-medium px-3 py-1 rounded hover:bg-red-500/10"
+									className="text-red-400 hover:text-red-300 transition-colors text-sm px-3 py-1 rounded hover:bg-red-500/10"
 									title="Logout"
 								>
 									Logout
 								</button>
 							</div>
 						) : (
-							<Link to="/login" className="text-gray-300 hover:text-white transition-colors text-sm font-medium px-3 py-1">Login</Link>
+							<Link 
+								to="/login" 
+								className="text-white bg-blue-600 hover:bg-blue-700 transition-colors text-sm px-4 py-2 rounded-full"
+							>
+								Login
+							</Link>
 						)}
 					</div>
-					<div className="hidden md:flex items-center space-x-4 flex-shrink-0" />
-					<button className="md:hidden text-white" onClick={()=>setMobileOpen(!mobileOpen)}>☰</button>
+					<button className="md:hidden text-white ml-auto" onClick={()=>setMobileOpen(!mobileOpen)}>☰</button>
 				</div>
 			</header>
 

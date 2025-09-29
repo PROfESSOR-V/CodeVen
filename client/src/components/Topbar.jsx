@@ -123,7 +123,7 @@ export function Topbar() {
 	return (
 		<header className="sticky top-0 z-10 border-b border-[var(--border-color)] bg-[rgba(22,27,34,0.6)] backdrop-blur">
 			<div className="px-4 py-3 flex items-center gap-4">
-				<div className="hidden md:block text-sm flex items-center h-10" style={{color:'var(--text-secondary)'}}>Logged in as <span className="font-medium capitalize ml-1" style={{color:'var(--color-brand-light)'}}>{role}</span></div>
+				<div className="hidden md:block text-sm flex items-center h-10" style={{color:'var(--text-secondary)'}}><span className="font-medium capitalize ml-1" style={{color:'var(--color-brand-light)'}}>{role}</span></div>
 				<div className="flex-1 max-w-xl relative">
 					<div className="relative flex items-center bg-gray-800 rounded-lg border border-gray-600">
 						<div className="flex items-center justify-center w-10 h-10">

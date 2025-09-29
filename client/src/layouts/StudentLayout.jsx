@@ -7,15 +7,19 @@ export function StudentLayout() {
 	const logout = () => { localStorage.removeItem('role'); navigate('/login'); };
 
 	const navLinkClass = ({ isActive }) =>
-		`flex items-center gap-3 px-3 py-2 rounded-lg transition-colors ${
+		`flex items-center gap-3 px-4 py-2.5 rounded-md transition-all duration-200 ${
 			isActive
-				? 'bg-white/10 text-white'
-				: 'text-gray-300 hover:text-white hover:bg-white/10'
+				? 'bg-white/10 backdrop-blur-sm text-white font-medium shadow-sm'
+				: 'text-gray-400 hover:text-white hover:bg-white/5'
 		}`;
 
 	return (
-		<div className="min-h-screen grid md:grid-cols-[240px_1fr]">
-			<aside className="p-4" style={{background:'var(--bg-medium)', borderRight:'1px solid var(--border-color)'}}>
+		<div className="min-h-screen">
+			<aside className="fixed top-0 left-0 h-screen w-[240px] p-4 overflow-y-auto backdrop-blur-md" 
+				style={{
+					background: 'rgba(10, 18, 32, 0.95)',
+					borderRight: '1px solid var(--border-color)'
+				}}>
 				<div className="mb-6">
 					<a href="/" className="text-xl font-bold text-brand-blue">CODEVENGERS</a>
 				</div>
@@ -36,7 +40,7 @@ export function StudentLayout() {
 				</nav>
 				<button className="btn btn-outline mt-6 w-full" onClick={logout}><LogOut size={16}/> Logout</button>
 			</aside>
-			<div className="flex flex-col min-h-screen">
+			<div className="ml-[240px] flex flex-col min-h-screen">
 				<Topbar />
 				<main className="p-6 space-y-6 flex-1">
 					<Outlet />

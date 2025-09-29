@@ -1,8 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from "react";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword } from 'firebase/auth';
 
 const AuthContext = createContext(undefined);
 
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 export function AuthProvider({ children }) {
 	const [isAuthenticated, setIsAuthenticated] = useState(false);
@@ -10,73 +11,95 @@ export function AuthProvider({ children }) {
 	const [user, setUser] = useState(null);
 	const [isLoading, setIsLoading] = useState(true);
 
+	const auth = getAuth();
+
 	useEffect(() => {
-		try {
-			const token = localStorage.getItem("token");
-			if (token) {
-				// Validate token and fetch user data
-				validateToken(token);
-			} else {
+		const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+			setIsLoading(true);
+			try {
+				if (firebaseUser) {
+					const token = await firebaseUser.getIdToken();
+					const userData = await validateToken(token);
+					if (userData) {
+						setUser(userData);
+						setRole(userData.role);
+						setIsAuthenticated(true);
+						localStorage.setItem('userProfile', JSON.stringify(userData));
+					} else {
+						logout();
+					}
+				} else {
+					logout();
+				}
+			} catch (error) {
+				console.error("Auth state change error:", error);
+				logout();
+			} finally {
 				setIsLoading(false);
 			}
-		} catch (error) {
-			console.error("Auth initialization error:", error);
-			setIsLoading(false);
-		}
+		});
+
+		return () => unsubscribe();
 	}, []);
 
 	const validateToken = async (token) => {
 		try {
-			const response = await fetch(`${API_URL}/auth/profile`, {
+			const response = await fetch(`${API_URL}/auth/sync`, {
+				method: 'POST',
 				headers: {
-					'Authorization': `Bearer ${token}`
+					'Authorization': `Bearer ${token}`,
+					'Content-Type': 'application/json'
 				}
 			});
 			if (response.ok) {
 				const userData = await response.json();
-				setUser(userData);
-				setRole(userData.role);
-				setIsAuthenticated(true);
+				return userData;
 			} else {
-				// Token is invalid
-				logout();
+				console.error("Token validation failed:", response.status);
+				return null;
 			}
 		} catch (error) {
 			console.error("Token validation error:", error);
-			logout();
-		} finally {
-			setIsLoading(false);
+			return null;
 		}
 	};
 
 	const login = async (email, password, userRole, additionalData = {}) => {
 		try {
-			const response = await fetch(`${API_URL}/auth/login`, {
+			// First authenticate with Firebase
+			const userCredential = await signInWithEmailAndPassword(auth, email, password);
+			const token = await userCredential.user.getIdToken();
+
+			// Then sync with our backend
+			const response = await fetch(`${API_URL}/auth/sync`, {
 				method: 'POST',
 				headers: {
+					'Authorization': `Bearer ${token}`,
 					'Content-Type': 'application/json',
-				},
-				body: JSON.stringify({
-					email,
-					password,
-					role: userRole,
-					...additionalData
-				}),
+				}
 			});
 
-			const data = await response.json();
+			if (response.ok) {
+				const userData = await response.json();
+				
+				// Verify role matches if userRole is provided
+				if (userRole && userData.role !== userRole) {
+					throw new Error('Invalid role for this portal');
+				}
 
-			if (response.ok && data.token) {
-				setUser(data);
-				setRole(data.role);
+				setUser(userData);
+				setRole(userData.role);
 				setIsAuthenticated(true);
-				localStorage.setItem("token", data.token);
+				localStorage.setItem('userProfile', JSON.stringify(userData));
+				
 				return true;
 			} else {
-				throw new Error(data.message || 'Login failed');
+				const errorData = await response.json();
+				throw new Error(errorData.message || 'Login failed');
 			}
 		} catch (error) {
 			console.error("Login error:", error);
+			logout();
 			throw error;
 		}
 	};
@@ -108,11 +131,18 @@ export function AuthProvider({ children }) {
 		}
 	};
 
-	const logout = () => {
-		setUser(null);
-		setRole(null);
-		setIsAuthenticated(false);
-		localStorage.removeItem("token");
+	const logout = async () => {
+		try {
+			await auth.signOut();
+		} catch (error) {
+			console.error("Logout error:", error);
+		} finally {
+			setUser(null);
+			setRole(null);
+			setIsAuthenticated(false);
+			localStorage.removeItem("userProfile");
+			localStorage.removeItem("token");
+		}
 	};
 
 	return (

@@ -1,8 +1,23 @@
 import { useNavigate } from 'react-router-dom';
 import { useScrollAnimation, useStaggeredAnimation } from '../hooks/useScrollAnimation.js';
+import { useEffect, useState } from 'react';
 
 export function AdminDashboard() {
 	const navigate = useNavigate();
+	const [adminInfo, setAdminInfo] = useState({
+		name: '',
+		department: '',
+		designation: ''
+	});
+
+	useEffect(() => {
+		const profileData = JSON.parse(localStorage.getItem('userProfile') || '{}');
+		setAdminInfo({
+			name: profileData.name || 'Admin User',
+			department: profileData.department || 'Administration',
+			designation: profileData.designation || 'System Administrator'
+		});
+	}, []);
 
 	// Scroll animation hooks
 	const headerRef = useScrollAnimation({ animationClass: 'fade-in-up', delay: 0.1 });
@@ -30,8 +45,10 @@ export function AdminDashboard() {
 			{/* Header with Role Switcher */}
 			<div ref={headerRef} className="flex justify-between items-center gpu-accelerated">
 				<div>
-					<h1 className="text-3xl font-bold" style={{color:'var(--text-primary)'}}>Admin Dashboard</h1>
-					<p className="mt-2" style={{color:'var(--text-secondary)'}}>Complete system administration and oversight</p>
+					<h1 className="text-3xl font-bold" style={{color:'var(--text-primary)'}}>Welcome, {adminInfo.name}</h1>
+					<p className="mt-2" style={{color:'var(--text-secondary)'}}>
+						{adminInfo.designation} - {adminInfo.department}
+					</p>
 				</div>
 				<div className="flex gap-2">
 					<button 

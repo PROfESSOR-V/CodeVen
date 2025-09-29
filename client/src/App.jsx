@@ -1,29 +1,41 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import { BrowserRouter, Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { useEffect } from 'react';
 import './App.css';
 import { ProfileProvider } from './contexts/ProfileContext.jsx';
 import { FirebaseAuthProvider, useFirebaseAuth } from './contexts/FirebaseAuthContext';
+import { useAuth, AuthProvider } from './contexts/AuthContext';
 
 const ProtectedRoute = ({ children, allowedRoles }) => {
-	const { user, loading } = useFirebaseAuth();
+	const { isAuthenticated, user, role, isLoading } = useAuth();
+	const navigate = useNavigate();
 	
-	console.log('ProtectedRoute check:', { user, loading, allowedRoles, path: window.location.pathname });
+	console.log('ProtectedRoute check:', { isAuthenticated, user, role, isLoading, allowedRoles, path: window.location.pathname });
 	
-	if (loading) {
-		// Show loading spinner or placeholder while checking auth
-		return <div>Loading...</div>;
+	useEffect(() => {
+		if (!isLoading) {
+			if (!isAuthenticated) {
+				console.log('Not authenticated, redirecting to login');
+				navigate('/login', { replace: true });
+			} else if (!role || !allowedRoles.includes(role)) {
+				console.log('Access denied - invalid role:', role);
+				navigate(`/login/${role || ''}`, { replace: true });
+			}
+		}
+	}, [isAuthenticated, role, isLoading, allowedRoles, navigate]);
+	
+	if (isLoading) {
+		return (
+			<div className="flex items-center justify-center min-h-screen">
+				<div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-blue-500"></div>
+			</div>
+		);
 	}
 	
-	if (!user) {
-		console.log('No user, redirecting to login');
-		return <Navigate to="/login/student" replace />;
-	}
-
-	if (!user.role || !allowedRoles.includes(user.role)) {
-		console.log('Access denied - invalid role:', user.role);
-		return <Navigate to={`/login/${user.role || 'student'}`} replace />;
+	if (!isAuthenticated || !role || !allowedRoles.includes(role)) {
+		return null;
 	}
 	
-	console.log('Access granted for role:', user.role);
+	console.log('Access granted for role:', role);
 	return <>{children}</>;
 }
 
@@ -53,16 +65,18 @@ import { AdminPlacements } from './pages/AdminPlacements.jsx';
 import { AdminEvents } from './pages/AdminEvents.jsx';
 import { VerifierPage } from './pages/VerifierPage.jsx';
 import { EditProfilePage } from './pages/EditProfilePage.jsx';
+import { PortalSelection } from './components/auth/PortalSelection.jsx';
 
 export default function App() {
 	return (
 		<FirebaseAuthProvider>
-			<ProfileProvider>
-				<BrowserRouter>
-					<Routes>
+			<AuthProvider>
+				<ProfileProvider>
+					<BrowserRouter>
+						<Routes>
 					<Route path="/" element={<LandingPage />} />
 					<Route path="/login">
-						<Route index element={<Navigate to="/login/student" replace />} />
+						<Route index element={<PortalSelection />} />
 						<Route path="student" element={<StudentLoginPage />} />
 						<Route path="faculty" element={<FacultyLoginPage />} />
 						<Route path="admin" element={<AdminLoginPage />} />
@@ -72,7 +86,7 @@ export default function App() {
 							<StudentLayout />
 						</ProtectedRoute>
 					}>
-						<Route index element={<DashboardPage />} />
+						<Route index element={<Navigate to="dashboard" replace />} />
 						<Route path="dashboard" element={<DashboardPage />} />
 						<Route path="upload" element={<UploadPage />} />
 						<Route path="activities" element={<ActivitiesPage />} />
@@ -81,6 +95,7 @@ export default function App() {
 						<Route path="edit-profile" element={<EditProfilePage />} />
 						<Route path="coding" element={<CodingPage />} />
 						<Route path="resume" element={<ResumeImportPage />} />
+						<Route path="*" element={<Navigate to="dashboard" replace />} />
 					</Route>
 
 					<Route path="/faculty" element={
@@ -88,10 +103,12 @@ export default function App() {
 							<FacultyLayout />
 						</ProtectedRoute>
 					}>
-						<Route index element={<FacultyDashboard />} />
+						<Route index element={<Navigate to="dashboard" replace />} />
+						<Route path="dashboard" element={<FacultyDashboard />} />
 						<Route path="approvals" element={<FacultyApprovals />} />
 						<Route path="students" element={<FacultyStudents />} />
 						<Route path="mentor" element={<FacultyStudent360 />} />
+						<Route path="*" element={<Navigate to="dashboard" replace />} />
 					</Route>
 
 					<Route path="/admin" element={
@@ -99,17 +116,20 @@ export default function App() {
 							<AdminLayout />
 						</ProtectedRoute>
 					}>
-						<Route index element={<AdminDashboard />} />
+						<Route index element={<Navigate to="dashboard" replace />} />
+						<Route path="dashboard" element={<AdminDashboard />} />
 						<Route path="approvals" element={<FacultyApprovals />} />
 						<Route path="analytics" element={<AdminAnalytics />} />
 						<Route path="placements" element={<AdminPlacements />} />
 						<Route path="events" element={<AdminEvents />} />
+						<Route path="*" element={<Navigate to="dashboard" replace />} />
 					</Route>
 
 					<Route path="*" element={<Navigate to="/" replace />} />
 				</Routes>
 			</BrowserRouter>
 		</ProfileProvider>
+		</AuthProvider>
 		</FirebaseAuthProvider>
 	);
 }

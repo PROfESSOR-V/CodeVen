@@ -26,6 +26,26 @@ export function FacultyLoginPage() {
       required: true,
       placeholder: 'Select your department',
       options: departments
+    },
+    {
+      name: 'designation',
+      label: 'Designation',
+      type: 'select',
+      required: true,
+      placeholder: 'Select your designation',
+      options: [
+        'Assistant Professor',
+        'Associate Professor',
+        'Professor',
+        'Head of Department',
+        'Dean'
+      ]
+    },
+    {
+      name: 'specialization',
+      label: 'Specialization',
+      required: true,
+      placeholder: 'Enter your area of specialization'
     }
   ];
 

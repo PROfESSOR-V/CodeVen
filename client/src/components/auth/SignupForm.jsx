@@ -104,17 +104,26 @@ export function SignupForm({ role, onToggleForm, additionalFields = [] }) {
     if (validateForm()) {
       try {
         setIsLoading(true);
-        // Register with Firebase and create user in MongoDB
-        await register(formData.email, formData.password, {
+        // For demo purposes, we'll just store in localStorage
+        localStorage.setItem('role', role);
+        localStorage.setItem('isAuthenticated', 'true');
+        localStorage.setItem(`${role}Profile`, JSON.stringify({
           name: formData.name,
-          role,
+          email: formData.email,
+          role: role,
           ...Object.fromEntries(
             additionalFields.map(field => [field.name, formData[field.name]])
           )
-        });
+        }));
 
         // Navigate to appropriate dashboard based on role
-        navigate(`/${role}/dashboard`);
+        if (role === 'student') {
+          navigate('/student/dashboard');
+        } else if (role === 'faculty') {
+          navigate('/faculty');
+        } else if (role === 'admin') {
+          navigate('/admin');
+        }
       } catch (error) {
         setErrors({ submit: error.message });
       } finally {
